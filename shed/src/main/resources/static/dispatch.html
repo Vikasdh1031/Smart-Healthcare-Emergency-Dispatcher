@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Healthcare Emergency Dispatcher</title>
+    <style>
+        body {
+          font-family: 'Poppins', sans-serif;
+          background: linear-gradient(to right, #74ebd5, #ACB6E5);
+          min-height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        .container {
+          background: white;
+          padding: 30px;
+          border-radius: 16px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+          width: 420px;
+        }
+        h2 {
+          text-align: center;
+          color: #333;
+        }
+        label {
+          font-weight: bold;
+          margin-top: 10px;
+          display: block;
+        }
+        input, textarea {
+          width: 100%;
+          padding: 10px;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          margin-top: 5px;
+        }
+        button {
+          background: #4CAF50;
+          color: white;
+          border: none;
+          padding: 12px;
+          width: 100%;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 16px;
+          margin-top: 15px;
+        }
+        button:hover {
+          background: #43A047;
+        }
+        .result {
+          margin-top: 20px;
+          padding: 15px;
+          background: #f9f9f9;
+          border-radius: 8px;
+          display: none;
+        }
+        .result h3 {
+          color: #2E7D32;
+          margin-bottom: 10px;
+        }
+        .route-link {
+          display: inline-block;
+          margin-top: 10px;
+          padding: 10px 15px;
+          background: #2196F3;
+          color: white;
+          text-decoration: none;
+          border-radius: 6px;
+        }
+        .route-link:hover {
+          background: #1976D2;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>🚑 Smart Healthcare Dispatcher</h2>
+    <form id="dispatchForm">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" required placeholder="Enter patient name" />
+
+        <label for="age">Age</label>
+        <input type="number" id="age" required placeholder="Enter age" />
+
+        <label for="condition">Patient Condition</label>
+        <textarea id="condition" rows="2" placeholder="e.g., Chest Pain, Accident"></textarea>
+
+        <label for="severity">Severity Level (1–10)</label>
+        <input type="number" id="severity" min="1" max="10" required placeholder="1–10" />
+
+        <label for="address">Your Address / Area</label>
+        <input type="text" id="address" required placeholder="e.g., Kengeri, Bangalore" />
+
+        <button type="submit">Find Nearest Hospital</button>
+    </form>
+
+    <div class="result" id="result">
+        <h3>🏥 Hospital Assigned:</h3>
+        <p><strong>Name:</strong> <span id="hospitalName"></span></p>
+        <p><strong>Location:</strong> <span id="hospitalLocation"></span></p>
+        <p><strong>Distance:</strong> <span id="distance"></span> km</p>
+        <p><strong>Available Beds:</strong> <span id="beds"></span></p>
+        <a id="routeLink" class="route-link" target="_blank">Open in Google Maps</a>
+    </div>
+</div>
+
+<script>
+    document.getElementById("dispatchForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const patient = {
+        name: document.getElementById("name").value,
+        age: document.getElementById("age").value,
+        patientCondition: document.getElementById("condition").value,
+        severityLevel: document.getElementById("severity").value,
+        address: document.getElementById("address").value
+      };
+
+      const response = await fetch("http://localhost:8090/api/dispatch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patient)
+      });
+
+      const data = await response.json();
+
+      // Display result
+      document.getElementById("result").style.display = "block";
+      document.getElementById("hospitalName").textContent = data.hospitalName;
+      document.getElementById("hospitalLocation").textContent = data.hospitalLocation;
+      document.getElementById("distance").textContent = data.distanceKm;
+      document.getElementById("beds").textContent = data.availableBedsLeft;
+      document.getElementById("routeLink").href = data.routeUrl;
+    });
+</script>
+</body>
+</html>

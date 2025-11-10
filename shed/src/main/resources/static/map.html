@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Healthcare Emergency Dispatcher</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f6f8;
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+        }
+
+        /* Left section: Map */
+        #map {
+            flex: 3;
+            height: 100vh;
+            border-radius: 0;
+        }
+
+        /* Right section: Control Panel */
+        #side-panel {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #007bff;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-card h3 {
+            margin: 0 0 5px 0;
+            color: #007bff;
+        }
+
+        .info-card p {
+            margin: 5px 0;
+            color: #333;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 12px;
+            color: white;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .badge.green { background-color: #28a745; }
+        .badge.red { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+
+<!-- 🌍 MAP SECTION -->
+<div id="map"></div>
+
+<!-- ⚙️ CONTROL PANEL -->
+<div id="side-panel">
+    <h2>🚑 Emergency Dispatcher</h2>
+    <input type="text" id="address" placeholder="Enter your location (e.g. Kengeri, Bangalore)">
+    <button onclick="findNearestHospital()">Find Nearest Hospital</button>
+
+    <div id="info-container"></div>
+</div>
+
+<script>
+    const map = L.map('map').setView([12.9716, 77.5946], 12); // Default Bangalore
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    let hospitals = [];
+    let userMarker = null;
+    let routeLine = null;
+
+    async function loadHospitals() {
+        const res = await fetch('/api/hospitals');
+        hospitals = await res.json();
+
+        hospitals.forEach(h => {
+            const marker = L.marker([h.latitude, h.longitude])
+                .addTo(map)
+                .bindPopup(`<b>${h.name}</b><br>${h.location}<br>Beds: ${h.availableBeds}/${h.capacity}`);
+
+            const iconColor = h.availableBeds === 0 ? 'red' : 'green';
+            marker.setIcon(new L.Icon({
+                iconUrl: `https://maps.google.com/mapfiles/ms/icons/${iconColor}-dot.png`,
+                iconSize: [32, 32]
+            }));
+        });
+    }
+
+    async function geocodeAddress(address) {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.length > 0) {
+            return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+        }
+        return null;
+    }
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    async function findNearestHospital() {
+        const address = document.getElementById('address').value.trim();
+        const infoContainer = document.getElementById('info-container');
+        infoContainer.innerHTML = '';
+
+        if (!address) {
+            alert('Please enter your address');
+            return;
+        }
+
+        const userLoc = await geocodeAddress(address);
+        if (!userLoc) {
+            alert('Address not found.');
+            return;
+        }
+
+        if (userMarker) map.removeLayer(userMarker);
+        if (routeLine) map.removeLayer(routeLine);
+
+        userMarker = L.marker([userLoc.lat, userLoc.lon])
+            .addTo(map)
+            .bindPopup('You are here')
+            .openPopup();
+
+        let nearest = null;
+        let minDist = Infinity;
+
+        hospitals.forEach(h => {
+            const dist = getDistance(userLoc.lat, userLoc.lon, h.latitude, h.longitude);
+            if (dist < minDist) {
+                minDist = dist;
+                nearest = h;
+            }
+        });
+
+        if (nearest) {
+            routeLine = L.polyline([
+                [userLoc.lat, userLoc.lon],
+                [nearest.latitude, nearest.longitude]
+            ], { color: 'blue', weight: 4 }).addTo(map);
+
+            map.fitBounds(routeLine.getBounds());
+
+            // 🏥 Display info card
+            const bedColor = nearest.availableBeds > 0 ? 'green' : 'red';
+            infoContainer.innerHTML = `
+                <div class="info-card">
+                    <h3>${nearest.name}</h3>
+                    <p><b>📍 Location:</b> ${nearest.location}</p>
+                    <p><b>🛏️ Beds:</b> ${nearest.availableBeds} / ${nearest.capacity}</p>
+                    <p><b>📏 Distance:</b> ${minDist.toFixed(2)} km</p>
+                    <span class="badge ${bedColor}">
+                        ${nearest.availableBeds > 0 ? 'Beds Available' : 'Full'}
+                    </span>
+                </div>
+            `;
+
+            console.log(`Nearest Hospital: ${nearest.name}`);
+        }
+    }
+
+    loadHospitals();
+</script>
+</body>
+</html>

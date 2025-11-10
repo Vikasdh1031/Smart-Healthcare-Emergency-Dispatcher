@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Healthcare Emergency Dispatcher</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+          font-family: "Poppins", sans-serif;
+          background-color: #f4f7fb;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        h1 {
+          color: #1a73e8;
+          margin-top: 20px;
+        }
+        form {
+          background: white;
+          padding: 20px;
+          border-radius: 10px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+          margin: 20px 0;
+          width: 400px;
+        }
+        input, button {
+          width: 100%;
+          padding: 10px;
+          margin: 10px 0;
+          border-radius: 5px;
+          border: 1px solid #ccc;
+          font-size: 15px;
+        }
+        button {
+          background-color: #1a73e8;
+          color: white;
+          font-weight: bold;
+          cursor: pointer;
+          border: none;
+        }
+        button:hover {
+          background-color: #155ab6;
+        }
+        #result {
+          font-weight: bold;
+          margin-top: 10px;
+          color: green;
+        }
+        #map {
+          height: 400px;
+          width: 80%;
+          border-radius: 10px;
+          margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🏥 Smart Healthcare Emergency Dispatcher</h1>
+
+<form id="dispatchForm">
+    <input type="text" id="name" placeholder="Patient Name" required>
+    <input type="number" id="age" placeholder="Age" required>
+    <input type="text" id="condition" placeholder="Patient Condition" required>
+    <input type="number" id="severity" placeholder="Severity Level (1-5)" required>
+    <input type="number" id="latitude" placeholder="Patient Latitude" step="0.0001" required>
+    <input type="number" id="longitude" placeholder="Patient Longitude" step="0.0001" required>
+    <button type="submit">🚑 Dispatch Nearest Hospital</button>
+    <div id="result"></div>
+</form>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map').setView([12.9716, 77.5946], 12); // Default - Bangalore
+
+    // OpenStreetMap layer (free)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const form = document.getElementById('dispatchForm');
+    const resultDiv = document.getElementById('result');
+    let patientMarker, hospitalMarker;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const patient = {
+        name: document.getElementById('name').value,
+        age: parseInt(document.getElementById('age').value),
+        patientCondition: document.getElementById('condition').value,
+        severityLevel: parseInt(document.getElementById('severity').value),
+        latitude: parseFloat(document.getElementById('latitude').value),
+        longitude: parseFloat(document.getElementById('longitude').value)
+      };
+
+      resultDiv.innerHTML = "🕐 Finding nearest hospital...";
+
+      try {
+        const response = await fetch('/api/dispatch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(patient)
+        });
+
+        if (!response.ok) throw new Error("Dispatch failed");
+
+        const hospital = await response.json();
+
+        resultDiv.innerHTML = `✅ Nearest Hospital: <b>${hospital.name}</b> (${hospital.location})`;
+
+        if (patientMarker) map.removeLayer(patientMarker);
+        if (hospitalMarker) map.removeLayer(hospitalMarker);
+
+        patientMarker = L.marker([patient.latitude, patient.longitude])
+          .addTo(map)
+          .bindPopup(`<b>${patient.name}</b><br>Patient Location`)
+          .openPopup();
+
+        hospitalMarker = L.marker([hospital.latitude, hospital.longitude], { icon: L.icon({
+          iconUrl: 'https://cdn-icons-png.flaticon.com/512/190/190411.png',
+          iconSize: [30, 30]
+        })})
+          .addTo(map)
+          .bindPopup(`<b>${hospital.name}</b><br>${hospital.location}`)
+          .openPopup();
+
+        const bounds = L.latLngBounds([patientMarker.getLatLng(), hospitalMarker.getLatLng()]);
+        map.fitBounds(bounds);
+
+      } catch (err) {
+        resultDiv.innerHTML = "❌ Error: Could not dispatch hospital.";
+        console.error(err);
+      }
+    });
+</script>
+
+</body>
+</html>

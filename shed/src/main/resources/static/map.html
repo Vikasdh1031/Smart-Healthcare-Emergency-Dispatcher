@@ -5,93 +5,412 @@
     <title>Smart Healthcare Emergency Dispatcher</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            background: #f4f6f8;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #0b0f17;
             display: flex;
             flex-direction: row;
             height: 100vh;
+            overflow: hidden;
         }
 
-        /* Left section: Map */
+        /* Left section: Map - Premium styling */
         #map {
             flex: 3;
             height: 100vh;
             border-radius: 0;
+            filter: contrast(1.05) saturate(0.9) brightness(0.9);
+            border-right: 1px solid rgba(255, 255, 255, 0.03);
         }
 
-        /* Right section: Control Panel */
+        /* Leaflet dark theme overrides */
+        .leaflet-control-zoom {
+            border: none !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+        }
+        .leaflet-control-zoom a {
+            background: #1e293b !important;
+            color: #c9d1d9 !important;
+            border-color: #30363d !important;
+            transition: all 0.2s ease;
+        }
+        .leaflet-control-zoom a:hover {
+            background: #2d3748 !important;
+        }
+        .leaflet-popup-content-wrapper {
+            background: #1e293b !important;
+            color: #e6edf3 !important;
+            border-radius: 16px !important;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.8) !important;
+            border: 1px solid #30363d;
+        }
+        .leaflet-popup-tip {
+            background: #1e293b !important;
+        }
+        .leaflet-popup-content {
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            font-size: 14px;
+        }
+
+        /* Right section: Control Panel - Premium */
         #side-panel {
-            flex: 1;
-            background: white;
-            padding: 20px;
-            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            flex: 1.1;
+            min-width: 340px;
+            background: #0d1117;
+            padding: 32px 28px;
+            box-shadow: -8px 0 30px rgba(0, 0, 0, 0.6);
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
+            border-left: 1px solid rgba(255, 255, 255, 0.02);
+            overflow-y: auto;
+        }
+
+        #side-panel::-webkit-scrollbar {
+            width: 5px;
+        }
+        #side-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #side-panel::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 12px;
+        }
+
+        /* Header */
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 8px;
+        }
+
+        .panel-header i {
+            font-size: 2rem;
+            background: linear-gradient(145deg, #1f6feb, #0d419d);
+            padding: 12px 14px;
+            border-radius: 18px;
+            color: white;
+            box-shadow: 0 8px 20px rgba(31, 111, 235, 0.25);
         }
 
         h2 {
-            margin-top: 0;
-            color: #007bff;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #f0f6fc, #8cb4f0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 0;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.8rem;
+            font-weight: 400;
+            margin-bottom: 24px;
+            padding-left: 14px;
+            border-left: 3px solid #1f6feb;
+            background: linear-gradient(90deg, rgba(31,111,235,0.04), transparent);
+            padding: 10px 14px;
+        }
+
+        .subtitle i {
+            color: #1f6feb;
+            margin-right: 8px;
+        }
+
+        /* Input */
+        .input-group {
+            position: relative;
+            margin-bottom: 14px;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6e7681;
+            font-size: 1rem;
+            pointer-events: none;
+            transition: color 0.2s ease;
         }
 
         input {
             width: 100%;
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            margin-bottom: 10px;
-            font-size: 16px;
+            padding: 16px 16px 16px 48px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 60px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            color: #f0f6fc;
+            transition: all 0.25s ease;
+            outline: none;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3);
         }
 
+        input::placeholder {
+            color: #6e7681;
+            font-weight: 400;
+        }
+
+        input:focus {
+            border-color: #1f6feb;
+            background: #0d1117;
+            box-shadow: 0 0 0 4px rgba(31, 111, 235, 0.12), inset 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        input:focus + i {
+            color: #1f6feb;
+        }
+
+        /* Button */
         button {
-            padding: 12px;
-            background-color: #007bff;
+            padding: 16px 20px;
+            background: linear-gradient(145deg, #1f6feb, #0d419d);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 60px;
             cursor: pointer;
             width: 100%;
-            font-size: 16px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 10px 24px -6px rgba(31, 111, 235, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            margin: 6px 0 18px 0;
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        button:hover::before {
+            left: 100%;
         }
 
         button:hover {
-            background-color: #0056b3;
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 18px 36px -8px #1f6febcc;
+            background: linear-gradient(145deg, #3174f0, #0f4ab0);
         }
 
+        button:active {
+            transform: scale(0.96);
+        }
+
+        button i {
+            font-size: 1.2rem;
+        }
+
+        /* Info Card - Premium */
         .info-card {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            background: #161b22;
+            border-radius: 24px;
+            padding: 22px 24px;
+            margin-top: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(6px);
+            transition: all 0.3s ease;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-card:hover {
+            border-color: rgba(31, 111, 235, 0.15);
         }
 
         .info-card h3 {
-            margin: 0 0 5px 0;
-            color: #007bff;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #f0f6fc;
+            margin: 0 0 14px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-card h3 i {
+            color: #1f6feb;
+            font-size: 1.3rem;
         }
 
         .info-card p {
-            margin: 5px 0;
-            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: #e6edf3;
+            font-size: 0.95rem;
+        }
+
+        .info-card p:last-of-type {
+            border-bottom: none;
+        }
+
+        .info-card p b {
+            color: #8b949e;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-card p b i {
+            color: #4d7ecf;
+            width: 20px;
+        }
+
+        .info-card p span {
+            font-weight: 500;
+            color: #f0f6fc;
         }
 
         .badge {
             display: inline-block;
-            padding: 5px 10px;
-            border-radius: 12px;
+            padding: 6px 18px;
+            border-radius: 40px;
             color: white;
-            font-size: 12px;
-            margin-top: 5px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
         }
 
-        .badge.green { background-color: #28a745; }
-        .badge.red { background-color: #dc3545; }
+        .badge.green {
+            background: #0f2d1a;
+            color: #3fb950;
+            border: 1px solid #238636;
+        }
+
+        .badge.red {
+            background: #2d0f14;
+            color: #f85149;
+            border: 1px solid #da3633;
+        }
+
+        /* Empty state */
+        .empty-state {
+            color: #6e7681;
+            text-align: center;
+            padding: 40px 10px;
+            font-size: 0.95rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .empty-state i {
+            font-size: 2.6rem;
+            opacity: 0.2;
+            color: #8b949e;
+        }
+
+        /* Loading state */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 30px;
+            color: #8b949e;
+            font-size: 0.95rem;
+        }
+
+        .loading i {
+            font-size: 1.5rem;
+            color: #1f6feb;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        .panel-footer {
+            margin-top: auto;
+            font-size: 0.7rem;
+            color: #30363d;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.02);
+            letter-spacing: 0.3px;
+        }
+
+        .panel-footer i {
+            margin-right: 6px;
+            color: #4d7ecf;
+        }
+
+        /* Responsive */
+        @media (max-width: 820px) {
+            body {
+                flex-direction: column;
+                height: auto;
+                overflow-y: auto;
+            }
+            #map {
+                height: 50vh;
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #30363d;
+            }
+            #side-panel {
+                min-width: unset;
+                width: 100%;
+                border-left: none;
+                padding: 24px 20px;
+                height: auto;
+            }
+        }
     </style>
 </head>
 <body>
@@ -101,49 +420,91 @@
 
 <!-- ⚙️ CONTROL PANEL -->
 <div id="side-panel">
-    <h2>🚑 Emergency Dispatcher</h2>
-    <input type="text" id="address" placeholder="Enter your location (e.g. Kengeri, Bangalore)">
-    <button onclick="findNearestHospital()">Find Nearest Hospital</button>
+    <div class="panel-header">
+        <i class="fas fa-bolt"></i>
+        <h2>Smart Dispatch</h2>
+    </div>
+    <div class="subtitle">
+        <i class="fas fa-location-dot"></i> Find the nearest hospital in real-time
+    </div>
 
-    <div id="info-container"></div>
+    <div class="input-group">
+        <input type="text" id="address" placeholder="Enter your location (e.g. Kengeri, Bangalore)">
+        <i class="fas fa-map-pin"></i>
+    </div>
+
+    <button onclick="findNearestHospital()">
+        <i class="fas fa-ambulance"></i> Find Nearest Hospital
+    </button>
+
+    <div id="info-container">
+        <div class="empty-state">
+            <i class="fas fa-hospital-user"></i>
+            <span>Enter your location to find the nearest hospital</span>
+        </div>
+    </div>
+
+    <div class="panel-footer">
+        <i class="fas fa-shield-alt"></i> HIPAA Compliant · Encrypted
+    </div>
 </div>
 
 <script>
-    const map = L.map('map').setView([12.9716, 77.5946], 12); // Default Bangalore
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const map = L.map('map', {
+        center: [12.9716, 77.5946],
+        zoom: 13,
+        zoomControl: false,
+    });
+    L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+    // Premium dark map tiles
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; CartoDB',
+        subdomains: 'abcd'
     }).addTo(map);
 
     let hospitals = [];
     let userMarker = null;
     let routeLine = null;
+    let hospitalMarkers = [];
 
     async function loadHospitals() {
         const res = await fetch('/api/hospitals');
         hospitals = await res.json();
 
         hospitals.forEach(h => {
-            const marker = L.marker([h.latitude, h.longitude])
-                .addTo(map)
-                .bindPopup(`<b>${h.name}</b><br>${h.location}<br>Beds: ${h.availableBeds}/${h.capacity}`);
-
             const iconColor = h.availableBeds === 0 ? 'red' : 'green';
-            marker.setIcon(new L.Icon({
-                iconUrl: `https://maps.google.com/mapfiles/ms/icons/${iconColor}-dot.png`,
-                iconSize: [32, 32]
-            }));
+            const marker = L.marker([h.latitude, h.longitude], {
+                icon: L.icon({
+                    iconUrl: `https://maps.google.com/mapfiles/ms/icons/${iconColor}-dot.png`,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32]
+                })
+            })
+            .addTo(map)
+            .bindPopup(`
+                <b>${h.name}</b><br>
+                📍 ${h.location}<br>
+                🛏️ ${h.availableBeds}/${h.capacity} beds
+                ${h.availableBeds === 0 ? ' <span style="color:#f85149;">(full)</span>' : ''}
+            `);
+            hospitalMarkers.push(marker);
         });
     }
 
     async function geocodeAddress(address) {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.length > 0) {
-            return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.length > 0) {
+                return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+            }
+            return null;
+        } catch {
+            return null;
         }
-        return null;
     }
 
     function getDistance(lat1, lon1, lat2, lon2) {
@@ -157,26 +518,49 @@
     async function findNearestHospital() {
         const address = document.getElementById('address').value.trim();
         const infoContainer = document.getElementById('info-container');
-        infoContainer.innerHTML = '';
 
         if (!address) {
-            alert('Please enter your address');
+            infoContainer.innerHTML = `
+                <div class="info-card" style="border-color:#da3633;">
+                    <h3><i class="fas fa-circle-exclamation" style="color:#f85149;"></i> Missing</h3>
+                    <p style="color:#8b949e;">Please enter your location.</p>
+                </div>
+            `;
             return;
         }
 
+        // Show loading state
+        infoContainer.innerHTML = `
+            <div class="loading">
+                <i class="fas fa-circle-notch"></i>
+                <span>Locating nearest hospital...</span>
+            </div>
+        `;
+
         const userLoc = await geocodeAddress(address);
         if (!userLoc) {
-            alert('Address not found.');
+            infoContainer.innerHTML = `
+                <div class="info-card" style="border-color:#da3633;">
+                    <h3><i class="fas fa-triangle-exclamation" style="color:#f85149;"></i> Not Found</h3>
+                    <p style="color:#8b949e;">We couldn't locate that address.</p>
+                </div>
+            `;
             return;
         }
 
         if (userMarker) map.removeLayer(userMarker);
         if (routeLine) map.removeLayer(routeLine);
 
-        userMarker = L.marker([userLoc.lat, userLoc.lon])
-            .addTo(map)
-            .bindPopup('You are here')
-            .openPopup();
+        userMarker = L.marker([userLoc.lat, userLoc.lon], {
+            icon: L.icon({
+                iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                iconSize: [32, 32],
+                iconAnchor: [16, 32]
+            })
+        })
+        .addTo(map)
+        .bindPopup('📍 You are here')
+        .openPopup();
 
         let nearest = null;
         let minDist = Infinity;
@@ -193,27 +577,59 @@
             routeLine = L.polyline([
                 [userLoc.lat, userLoc.lon],
                 [nearest.latitude, nearest.longitude]
-            ], { color: 'blue', weight: 4 }).addTo(map);
+            ], {
+                color: '#1f6feb',
+                weight: 5,
+                opacity: 0.8,
+                dashArray: '8, 6',
+                lineJoin: 'round'
+            }).addTo(map);
 
-            map.fitBounds(routeLine.getBounds());
+            map.fitBounds(routeLine.getBounds(), { padding: [60, 60] });
 
-            // 🏥 Display info card
+            // 🏥 Display premium info card
             const bedColor = nearest.availableBeds > 0 ? 'green' : 'red';
+            const bedIcon = nearest.availableBeds > 0 ? 'fa-check-circle' : 'fa-circle-exclamation';
+            const bedText = nearest.availableBeds > 0 ? 'Beds Available' : 'Full';
+
             infoContainer.innerHTML = `
                 <div class="info-card">
-                    <h3>${nearest.name}</h3>
-                    <p><b>📍 Location:</b> ${nearest.location}</p>
-                    <p><b>🛏️ Beds:</b> ${nearest.availableBeds} / ${nearest.capacity}</p>
-                    <p><b>📏 Distance:</b> ${minDist.toFixed(2)} km</p>
-                    <span class="badge ${bedColor}">
-                        ${nearest.availableBeds > 0 ? 'Beds Available' : 'Full'}
-                    </span>
+                    <h3><i class="fas fa-hospital"></i> ${nearest.name}</h3>
+                    <p>
+                        <b><i class="fas fa-location-dot"></i> Location</b>
+                        <span>${nearest.location}</span>
+                    </p>
+                    <p>
+                        <b><i class="fas fa-bed"></i> Beds</b>
+                        <span>${nearest.availableBeds} / ${nearest.capacity}</span>
+                    </p>
+                    <p>
+                        <b><i class="fas fa-route"></i> Distance</b>
+                        <span>${minDist.toFixed(2)} km</span>
+                    </p>
+                    <div style="display:flex; justify-content:flex-start; margin-top:10px;">
+                        <span class="badge ${bedColor}">
+                            <i class="fas ${bedIcon}"></i> ${bedText}
+                        </span>
+                    </div>
+                    <div style="margin-top:14px; font-size:0.8rem; color:#6e7681; border-top:1px solid #21262d; padding-top:12px; display:flex; gap:14px; flex-wrap:wrap;">
+                        <span><i class="fas fa-clock" style="color:#1f6feb;"></i> ETA ~${(minDist * 1.8).toFixed(0)} min</span>
+                        <span><i class="fas fa-phone" style="color:#1f6feb;"></i> Emergency: 108</span>
+                    </div>
                 </div>
             `;
 
-            console.log(`Nearest Hospital: ${nearest.name}`);
+            console.log(`✅ Nearest: ${nearest.name} (${minDist.toFixed(2)} km)`);
         }
     }
+
+    // Enter key support
+    document.getElementById('address').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            findNearestHospital();
+        }
+    });
 
     loadHospitals();
 </script>

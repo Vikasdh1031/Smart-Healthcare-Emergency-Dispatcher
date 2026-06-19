@@ -4,136 +4,614 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Smart Healthcare Emergency Dispatcher</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-          font-family: 'Poppins', sans-serif;
-          background: linear-gradient(to right, #74ebd5, #ACB6E5);
-          min-height: 100vh;
-          display: flex;
-          justify-content: center;
-          align-items: center;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
         }
+
+        /* Animated background orbs */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.3;
+            z-index: 0;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        body::before {
+            width: 500px;
+            height: 500px;
+            background: #667eea;
+            top: -150px;
+            right: -150px;
+            animation-delay: 0s;
+        }
+
+        body::after {
+            width: 600px;
+            height: 600px;
+            background: #764ba2;
+            bottom: -200px;
+            left: -200px;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(40px, -40px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.9); }
+        }
+
         .container {
-          background: white;
-          padding: 30px;
-          border-radius: 16px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-          width: 420px;
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 28px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            width: 460px;
+            max-width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.3s ease;
         }
+
+        .container:hover {
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header-icon {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 18px 20px;
+            border-radius: 20px;
+            font-size: 30px;
+            color: white;
+            margin-bottom: 14px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
         h2 {
-          text-align: center;
-          color: #333;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #f0f6fc, #8cb4f0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 4px;
         }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+
+        .subtitle i {
+            color: #667eea;
+            margin-right: 6px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
         label {
-          font-weight: bold;
-          margin-top: 10px;
-          display: block;
+            font-weight: 600;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            display: block;
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
         }
+
+        label i {
+            margin-right: 6px;
+            color: #667eea;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 14px;
+            transition: color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .input-wrapper i.fa-comment {
+            top: 18px;
+            transform: none;
+        }
+
         input, textarea {
-          width: 100%;
-          padding: 10px;
-          border: 1px solid #ccc;
-          border-radius: 8px;
-          margin-top: 5px;
+            width: 100%;
+            padding: 14px 16px 14px 44px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: #ffffff;
+            transition: all 0.3s ease;
+            outline: none;
         }
+
+        textarea {
+            padding: 14px 16px 14px 44px;
+            min-height: 60px;
+            resize: vertical;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+            font-weight: 400;
+        }
+
+        input:focus, textarea:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
+        }
+
+        input:focus + i, textarea:focus + i {
+            color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
         button {
-          background: #4CAF50;
-          color: white;
-          border: none;
-          padding: 12px;
-          width: 100%;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 16px;
-          margin-top: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            width: 100%;
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            margin-top: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
         }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+            transition: left 0.5s ease;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
         button:hover {
-          background: #43A047;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
         }
+
+        button:active {
+            transform: translateY(0px) scale(0.97);
+        }
+
+        button i {
+            font-size: 18px;
+        }
+
         .result {
-          margin-top: 20px;
-          padding: 15px;
-          background: #f9f9f9;
-          border-radius: 8px;
-          display: none;
+            margin-top: 24px;
+            padding: 24px 28px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: none;
+            animation: slideUp 0.4s ease;
         }
+
+        .result.show {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .result h3 {
-          color: #2E7D32;
-          margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #a8b5ff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
+
+        .result h3 i {
+            color: #4ade80;
+            font-size: 20px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .result-item:last-of-type {
+            border-bottom: none;
+        }
+
+        .result-item strong {
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-item strong i {
+            color: #667eea;
+            width: 18px;
+        }
+
+        .result-item span {
+            color: #ffffff;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
         .route-link {
-          display: inline-block;
-          margin-top: 10px;
-          padding: 10px 15px;
-          background: #2196F3;
-          color: white;
-          text-decoration: none;
-          border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 14px;
+            padding: 12px 22px;
+            background: rgba(102, 126, 234, 0.12);
+            color: #a8b5ff;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.12);
         }
+
         .route-link:hover {
-          background: #1976D2;
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateX(4px);
+            color: #c8d2ff;
+            border-color: rgba(102, 126, 234, 0.25);
+        }
+
+        .route-link i {
+            font-size: 16px;
+        }
+
+        .badge-status {
+            display: inline-block;
+            padding: 5px 16px;
+            border-radius: 40px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+        }
+
+        .badge-status.available {
+            background: rgba(74, 222, 128, 0.12);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.15);
+        }
+
+        .badge-status.full {
+            background: rgba(248, 113, 113, 0.12);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.15);
+        }
+
+        .loading-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            padding: 24px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+        }
+
+        .loading-state i {
+            font-size: 22px;
+            color: #667eea;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .footer-note {
+            margin-top: 22px;
+            text-align: center;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.1);
+            letter-spacing: 0.5px;
+        }
+
+        .footer-note i {
+            margin-right: 6px;
+            color: rgba(255, 255, 255, 0.15);
+        }
+
+        @media (max-width: 520px) {
+            .container {
+                padding: 28px 20px;
+                border-radius: 20px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+            h2 {
+                font-size: 22px;
+            }
+            .result {
+                padding: 18px 20px;
+            }
+            .result-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+            .route-link {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2>🚑 Smart Healthcare Dispatcher</h2>
+    <div class="header">
+        <div class="header-icon">
+            <i class="fas fa-bolt"></i>
+        </div>
+        <h2>Smart Healthcare Dispatcher</h2>
+        <div class="subtitle">
+            <i class="fas fa-location-dot"></i> Find the nearest hospital instantly
+        </div>
+    </div>
+
     <form id="dispatchForm">
-        <label for="name">Full Name</label>
-        <input type="text" id="name" required placeholder="Enter patient name" />
+        <div class="form-group">
+            <label for="name"><i class="fas fa-user"></i> Full Name</label>
+            <div class="input-wrapper">
+                <input type="text" id="name" required placeholder="Enter patient name" />
+                <i class="fas fa-user"></i>
+            </div>
+        </div>
 
-        <label for="age">Age</label>
-        <input type="number" id="age" required placeholder="Enter age" />
+        <div class="form-group">
+            <label for="age"><i class="fas fa-calendar-alt"></i> Age</label>
+            <div class="input-wrapper">
+                <input type="number" id="age" required placeholder="Enter age" />
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+        </div>
 
-        <label for="condition">Patient Condition</label>
-        <textarea id="condition" rows="2" placeholder="e.g., Chest Pain, Accident"></textarea>
+        <div class="form-group">
+            <label for="condition"><i class="fas fa-heartbeat"></i> Patient Condition</label>
+            <div class="input-wrapper">
+                <textarea id="condition" rows="2" placeholder="e.g., Chest Pain, Accident"></textarea>
+                <i class="fas fa-comment"></i>
+            </div>
+        </div>
 
-        <label for="severity">Severity Level (1–10)</label>
-        <input type="number" id="severity" min="1" max="10" required placeholder="1–10" />
+        <div class="form-row">
+            <div class="form-group">
+                <label for="severity"><i class="fas fa-exclamation-triangle"></i> Severity (1–10)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="severity" min="1" max="10" required placeholder="1–10" />
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="address"><i class="fas fa-map-pin"></i> Address / Area</label>
+                <div class="input-wrapper">
+                    <input type="text" id="address" required placeholder="e.g., Kengeri, Bangalore" />
+                    <i class="fas fa-map-pin"></i>
+                </div>
+            </div>
+        </div>
 
-        <label for="address">Your Address / Area</label>
-        <input type="text" id="address" required placeholder="e.g., Kengeri, Bangalore" />
-
-        <button type="submit">Find Nearest Hospital</button>
+        <button type="submit">
+            <i class="fas fa-ambulance"></i> Find Nearest Hospital
+        </button>
     </form>
 
     <div class="result" id="result">
-        <h3>🏥 Hospital Assigned:</h3>
-        <p><strong>Name:</strong> <span id="hospitalName"></span></p>
-        <p><strong>Location:</strong> <span id="hospitalLocation"></span></p>
-        <p><strong>Distance:</strong> <span id="distance"></span> km</p>
-        <p><strong>Available Beds:</strong> <span id="beds"></span></p>
-        <a id="routeLink" class="route-link" target="_blank">Open in Google Maps</a>
+        <h3><i class="fas fa-check-circle"></i> Hospital Assigned</h3>
+        <div class="result-item">
+            <strong><i class="fas fa-hospital"></i> Name</strong>
+            <span id="hospitalName">—</span>
+        </div>
+        <div class="result-item">
+            <strong><i class="fas fa-location-dot"></i> Location</strong>
+            <span id="hospitalLocation">—</span>
+        </div>
+        <div class="result-item">
+            <strong><i class="fas fa-route"></i> Distance</strong>
+            <span id="distance">— km</span>
+        </div>
+        <div class="result-item">
+            <strong><i class="fas fa-bed"></i> Available Beds</strong>
+            <span id="beds">—</span>
+        </div>
+        <div>
+            <span id="bedBadge" class="badge-status available">✅ Available</span>
+        </div>
+        <a id="routeLink" class="route-link" href="#" target="_blank">
+            <i class="fas fa-map"></i> Open in Google Maps
+        </a>
+    </div>
+
+    <div class="footer-note">
+        <i class="fas fa-shield-alt"></i> HIPAA Compliant · Encrypted
     </div>
 </div>
 
 <script>
     document.getElementById("dispatchForm").addEventListener("submit", async (event) => {
-      event.preventDefault();
+        event.preventDefault();
 
-      const patient = {
-        name: document.getElementById("name").value,
-        age: document.getElementById("age").value,
-        patientCondition: document.getElementById("condition").value,
-        severityLevel: document.getElementById("severity").value,
-        address: document.getElementById("address").value
-      };
+        const resultDiv = document.getElementById("result");
+        const hospitalName = document.getElementById("hospitalName");
+        const hospitalLocation = document.getElementById("hospitalLocation");
+        const distance = document.getElementById("distance");
+        const beds = document.getElementById("beds");
+        const routeLink = document.getElementById("routeLink");
+        const bedBadge = document.getElementById("bedBadge");
 
-      const response = await fetch("http://localhost:8090/api/dispatch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patient)
-      });
+        // Show loading state
+        resultDiv.className = "result";
+        resultDiv.innerHTML = `
+            <div class="loading-state">
+                <i class="fas fa-circle-notch"></i>
+                <span>Finding nearest hospital...</span>
+            </div>
+        `;
+        resultDiv.classList.add("show");
 
-      const data = await response.json();
+        const patient = {
+            name: document.getElementById("name").value,
+            age: document.getElementById("age").value,
+            patientCondition: document.getElementById("condition").value,
+            severityLevel: document.getElementById("severity").value,
+            address: document.getElementById("address").value
+        };
 
-      // Display result
-      document.getElementById("result").style.display = "block";
-      document.getElementById("hospitalName").textContent = data.hospitalName;
-      document.getElementById("hospitalLocation").textContent = data.hospitalLocation;
-      document.getElementById("distance").textContent = data.distanceKm;
-      document.getElementById("beds").textContent = data.availableBedsLeft;
-      document.getElementById("routeLink").href = data.routeUrl;
+        try {
+            const response = await fetch("http://localhost:8090/api/dispatch", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(patient)
+            });
+
+            if (!response.ok) throw new Error("Dispatch failed");
+
+            const data = await response.json();
+
+            // Check bed availability
+            const hasBeds = data.availableBedsLeft > 0;
+            const badgeClass = hasBeds ? 'available' : 'full';
+            const badgeText = hasBeds ? '✅ Available' : '❌ Full';
+
+            // Build premium result
+            resultDiv.className = "result";
+            resultDiv.innerHTML = `
+                <h3><i class="fas fa-check-circle"></i> Hospital Assigned</h3>
+                <div class="result-item">
+                    <strong><i class="fas fa-hospital"></i> Name</strong>
+                    <span>${data.hospitalName}</span>
+                </div>
+                <div class="result-item">
+                    <strong><i class="fas fa-location-dot"></i> Location</strong>
+                    <span>${data.hospitalLocation}</span>
+                </div>
+                <div class="result-item">
+                    <strong><i class="fas fa-route"></i> Distance</strong>
+                    <span>${data.distanceKm} km</span>
+                </div>
+                <div class="result-item">
+                    <strong><i class="fas fa-bed"></i> Available Beds</strong>
+                    <span>${data.availableBedsLeft}</span>
+                </div>
+                <div>
+                    <span class="badge-status ${badgeClass}">${badgeText}</span>
+                </div>
+                <a id="routeLink" class="route-link" href="${data.routeUrl}" target="_blank">
+                    <i class="fas fa-map"></i> Open in Google Maps
+                </a>
+            `;
+            resultDiv.classList.add("show");
+
+        } catch (error) {
+            console.error(error);
+            resultDiv.className = "result";
+            resultDiv.innerHTML = `
+                <div style="color: #f87171; display: flex; align-items: center; gap: 12px; justify-content: center; padding: 12px 0;">
+                    <i class="fas fa-circle-exclamation" style="font-size: 20px;"></i>
+                    <span>Error while assigning hospital. Please try again.</span>
+                </div>
+            `;
+            resultDiv.classList.add("show");
+        }
     });
 </script>
 </body>

@@ -1,143 +1,494 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Healthcare Emergency Dispatcher</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-          font-family: "Poppins", sans-serif;
-          background-color: #f4f7fb;
-          margin: 0;
-          padding: 0;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
         }
+
+        /* Animated background orbs */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.3;
+            z-index: 0;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        body::before {
+            width: 500px;
+            height: 500px;
+            background: #667eea;
+            top: -150px;
+            right: -150px;
+            animation-delay: 0s;
+        }
+
+        body::after {
+            width: 600px;
+            height: 600px;
+            background: #764ba2;
+            bottom: -200px;
+            left: -200px;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(40px, -40px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.9); }
+        }
+
         h1 {
-          color: #1a73e8;
-          margin-top: 20px;
+            position: relative;
+            z-index: 1;
+            font-size: 2.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
+            letter-spacing: -0.5px;
+            text-shadow: none;
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
+
+        h1::before {
+            content: '🏥';
+            -webkit-text-fill-color: initial;
+            font-size: 2.8rem;
+            filter: drop-shadow(0 0 20px rgba(79, 172, 254, 0.3));
+        }
+
         form {
-          background: white;
-          padding: 20px;
-          border-radius: 10px;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-          margin: 20px 0;
-          width: 400px;
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px;
+            width: 460px;
+            max-width: 100%;
+            margin: auto;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
         }
-        input, button {
-          width: 100%;
-          padding: 10px;
-          margin: 10px 0;
-          border-radius: 5px;
-          border: 1px solid #ccc;
-          font-size: 15px;
+
+        form:hover {
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
         }
+
+        input {
+            width: 100%;
+            padding: 14px 18px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: #ffffff;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 400;
+        }
+
+        input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+        }
+
+        input:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
         button {
-          background-color: #1a73e8;
-          color: white;
-          font-weight: bold;
-          cursor: pointer;
-          border: none;
+            width: 100%;
+            padding: 16px;
+            margin-top: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            transition: left 0.5s ease;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
         button:hover {
-          background-color: #155ab6;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
         }
+
+        button:active {
+            transform: translateY(0px) scale(0.98);
+        }
+
         #result {
-          font-weight: bold;
-          margin-top: 10px;
-          color: green;
+            position: relative;
+            z-index: 1;
+            margin-top: 30px;
+            padding: 25px 30px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            width: 460px;
+            max-width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+            color: #ffffff;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-        #map {
-          height: 400px;
-          width: 80%;
-          border-radius: 10px;
-          margin-bottom: 30px;
+
+        #result:empty {
+            display: none;
+        }
+
+        #result h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #a8b5ff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #result h3::before {
+            content: '✅';
+            font-size: 22px;
+        }
+
+        #result p {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            margin: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        #result p:last-of-type {
+            border-bottom: none;
+        }
+
+        #result p b {
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        #result p b i {
+            margin-right: 6px;
+            color: #667eea;
+        }
+
+        #result p span {
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            margin-top: 12px;
+            background: rgba(102, 126, 234, 0.15);
+            color: #a8b5ff;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            align-self: flex-start;
+        }
+
+        a:hover {
+            background: rgba(102, 126, 234, 0.25);
+            transform: translateX(4px);
+            color: #c8d2ff;
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        a i {
+            font-size: 16px;
+        }
+
+        /* Loading state */
+        #result.loading {
+            justify-content: center;
+            align-items: center;
+            flex-direction: row;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            padding: 30px;
+        }
+
+        #result.loading::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error state */
+        #result.error {
+            color: #f87171;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            font-weight: 500;
+        }
+
+        #result.error::before {
+            content: '❌';
+            font-size: 24px;
+            margin-right: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 520px) {
+            body {
+                padding: 20px 16px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            h1::before {
+                font-size: 2rem;
+            }
+
+            form, #result {
+                padding: 24px 20px;
+                width: 100%;
+            }
+
+            input {
+                padding: 12px 16px;
+                font-size: 13px;
+            }
+
+            button {
+                padding: 14px;
+                font-size: 14px;
+            }
+
+            #result p {
+                font-size: 13px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+
+            a {
+                align-self: stretch;
+                justify-content: center;
+            }
         }
     </style>
+
 </head>
 <body>
 
-<h1>🏥 Smart Healthcare Emergency Dispatcher</h1>
+<h1>Smart Healthcare Emergency Dispatcher</h1>
 
 <form id="dispatchForm">
-    <input type="text" id="name" placeholder="Patient Name" required>
-    <input type="number" id="age" placeholder="Age" required>
-    <input type="text" id="condition" placeholder="Patient Condition" required>
-    <input type="number" id="severity" placeholder="Severity Level (1-5)" required>
-    <input type="number" id="latitude" placeholder="Patient Latitude" step="0.0001" required>
-    <input type="number" id="longitude" placeholder="Patient Longitude" step="0.0001" required>
-    <button type="submit">🚑 Dispatch Nearest Hospital</button>
-    <div id="result"></div>
+    <input type="text"
+           id="name"
+           placeholder="👤 Patient Name"
+           required>
+
+    <input type="number"
+           id="age"
+           placeholder="📅 Age"
+           required>
+
+    <input type="text"
+           id="condition"
+           placeholder="💊 Patient Condition"
+           required>
+
+    <input type="number"
+           id="severity"
+           placeholder="⚠️ Severity Level (1-5)"
+           required>
+
+    <input type="text"
+           id="address"
+           placeholder="📍 Patient Address"
+           required>
+
+    <button type="submit">
+        🚑 Dispatch Nearest Hospital
+    </button>
 </form>
 
-<div id="map"></div>
+<div id="result"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const map = L.map('map').setView([12.9716, 77.5946], 12); // Default - Bangalore
+    document.getElementById("dispatchForm")
+    .addEventListener("submit", async function(e) {
 
-    // OpenStreetMap layer (free)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+        e.preventDefault();
 
-    const form = document.getElementById('dispatchForm');
-    const resultDiv = document.getElementById('result');
-    let patientMarker, hospitalMarker;
+        const patient = {
+            name: document.getElementById("name").value,
+            age: parseInt(document.getElementById("age").value),
+            patientCondition: document.getElementById("condition").value,
+            severityLevel: parseInt(document.getElementById("severity").value),
+            address: document.getElementById("address").value
+        };
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+        const resultDiv = document.getElementById("result");
 
-      const patient = {
-        name: document.getElementById('name').value,
-        age: parseInt(document.getElementById('age').value),
-        patientCondition: document.getElementById('condition').value,
-        severityLevel: parseInt(document.getElementById('severity').value),
-        latitude: parseFloat(document.getElementById('latitude').value),
-        longitude: parseFloat(document.getElementById('longitude').value)
-      };
+        // Show loading state
+        resultDiv.className = 'loading';
+        resultDiv.textContent = 'Finding nearest hospital...';
 
-      resultDiv.innerHTML = "🕐 Finding nearest hospital...";
+        try {
 
-      try {
-        const response = await fetch('/api/dispatch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(patient)
-        });
+            const response = await fetch("/api/dispatch", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(patient)
+            });
 
-        if (!response.ok) throw new Error("Dispatch failed");
+            if (!response.ok) {
+                throw new Error("Dispatch failed");
+            }
 
-        const hospital = await response.json();
+            const hospital = await response.json();
 
-        resultDiv.innerHTML = `✅ Nearest Hospital: <b>${hospital.name}</b> (${hospital.location})`;
+            // Format the hospital data with icons
+            const bedStatus = hospital.availableBedsLeft > 0 ? '✅' : '❌';
+            const bedColor = hospital.availableBedsLeft > 0 ? '#4ade80' : '#f87171';
 
-        if (patientMarker) map.removeLayer(patientMarker);
-        if (hospitalMarker) map.removeLayer(hospitalMarker);
+            resultDiv.className = '';
+            resultDiv.innerHTML = `
+                <h3>Hospital Assigned Successfully</h3>
 
-        patientMarker = L.marker([patient.latitude, patient.longitude])
-          .addTo(map)
-          .bindPopup(`<b>${patient.name}</b><br>Patient Location`)
-          .openPopup();
+                <p>
+                    <b><i class="fas fa-hospital"></i> Hospital:</b>
+                    <span>${hospital.hospitalName}</span>
+                </p>
 
-        hospitalMarker = L.marker([hospital.latitude, hospital.longitude], { icon: L.icon({
-          iconUrl: 'https://cdn-icons-png.flaticon.com/512/190/190411.png',
-          iconSize: [30, 30]
-        })})
-          .addTo(map)
-          .bindPopup(`<b>${hospital.name}</b><br>${hospital.location}`)
-          .openPopup();
+                <p>
+                    <b><i class="fas fa-location-dot"></i> Location:</b>
+                    <span>${hospital.hospitalLocation}</span>
+                </p>
 
-        const bounds = L.latLngBounds([patientMarker.getLatLng(), hospitalMarker.getLatLng()]);
-        map.fitBounds(bounds);
+                <p>
+                    <b><i class="fas fa-bed"></i> Available Beds Left:</b>
+                    <span style="color: ${bedColor};">${hospital.availableBedsLeft} ${bedStatus}</span>
+                </p>
 
-      } catch (err) {
-        resultDiv.innerHTML = "❌ Error: Could not dispatch hospital.";
-        console.error(err);
-      }
+                <p>
+                    <b><i class="fas fa-route"></i> Distance:</b>
+                    <span>${hospital.distanceKm} km</span>
+                </p>
+
+                <a href="${hospital.routeUrl}" target="_blank">
+                    <i class="fas fa-map"></i> Open Route in Google Maps
+                </a>
+            `;
+
+        } catch (error) {
+
+            console.error(error);
+
+            resultDiv.className = 'error';
+            resultDiv.textContent = 'Error while assigning hospital. Please try again.';
+        }
     });
 </script>
 

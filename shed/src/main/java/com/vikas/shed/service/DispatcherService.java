@@ -23,25 +23,57 @@ public class DispatcherService {
     // ✅ Convert address to coordinates (using OpenStreetMap)
     public double[] getCoordinatesFromAddress(String address) {
         try {
-            String url = "https://nominatim.openstreetmap.org/search?q=" +
-                    address.replace(" ", "+") + "&format=json&limit=1";
+
+            String url = "https://nominatim.openstreetmap.org/search?q="
+                    + address.replace(" ", "+")
+                    + "&format=json&limit=1";
 
             RestTemplate restTemplate = new RestTemplate();
-            List<Map<String, Object>> response = restTemplate.getForObject(url, List.class);
 
-            if (response != null && !response.isEmpty()) {
-                Map<String, Object> location = response.get(0);
-                double lat = Double.parseDouble((String) location.get("lat"));
-                double lon = Double.parseDouble((String) location.get("lon"));
+            org.springframework.http.HttpHeaders headers =
+                    new org.springframework.http.HttpHeaders();
+
+            headers.set("User-Agent",
+                    "SmartHealthcareDispatcher/1.0");
+
+            org.springframework.http.HttpEntity<String> entity =
+                    new org.springframework.http.HttpEntity<>(headers);
+
+            org.springframework.http.ResponseEntity<List> response =
+                    restTemplate.exchange(
+                            url,
+                            org.springframework.http.HttpMethod.GET,
+                            entity,
+                            List.class
+                    );
+
+            List<Map<String, Object>> locations = response.getBody();
+
+            if (locations != null && !locations.isEmpty()) {
+
+                Map<String, Object> location = locations.get(0);
+
+                double lat =
+                        Double.parseDouble(location.get("lat").toString());
+
+                double lon =
+                        Double.parseDouble(location.get("lon").toString());
+
+                System.out.println("✅ Address = " + address);
+                System.out.println("✅ Latitude = " + lat);
+                System.out.println("✅ Longitude = " + lon);
+
                 return new double[]{lat, lon};
-            } else {
-                System.err.println("❌ Address to Coordinates Error: Could not find coordinates for address: " + address);
             }
+
         } catch (Exception e) {
-            System.err.println("❌ Address Conversion Error: " + e.getMessage());
+            e.printStackTrace();
         }
+
         return new double[]{0, 0};
+
     }
+
 
     // ✅ Haversine distance formula
     private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
